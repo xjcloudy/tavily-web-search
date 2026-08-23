@@ -59,6 +59,11 @@ pnpm add file:/path/to/tavily-web-search
   config:
     apiKeyEnv: TAVILY_API_KEY
     maxResults: 10
+
+# Make tavily the active search provider
+- id: web
+  config:
+    searchProvider: tavily
 ```
 
 ### 3. Provide the API key (one of)
