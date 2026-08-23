@@ -6,8 +6,9 @@
   disabled: false
 
 # Register the tavily search provider
-- id: tavily-web-search
-  name: '@deepseek-ai/tavily-web-search'
-  config:
-    apiKeyEnv: TAVILY_API_KEY
-    maxResults: 10
+- insert:
+    - id: tavily-web-search
+      name: '@deepseek-ai/tavily-web-search'
+      config:
+        apiKeyEnv: TAVILY_API_KEY
+        maxResults: 10
