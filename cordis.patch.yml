@@ -1,0 +1,13 @@
+# tavily-web-search bundle patch
+# Applied as a layer when a profile lists this bundle in dsh.profile.bundles
+
+# Enable tool-web (disabled by default in dsh-web-app bundle)
+- id: tool-web
+  disabled: false
+
+# Register the tavily search provider
+- id: tavily-web-search
+  name: '@deepseek-ai/tavily-web-search'
+  config:
+    apiKeyEnv: TAVILY_API_KEY
+    maxResults: 10
