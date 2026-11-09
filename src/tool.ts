@@ -241,7 +241,12 @@ export function createTavilySearchTool(
     },
     async execute(args: Record<string, unknown>, exec): Promise<TavilySearchResponse> {
       const config = resolveConfig();
-      const apiKey = config.apiKey; // 已在 apply() 预解析，保证存在
+      const apiKey = config.apiKey?.length ? config.apiKey : await config.resolveApiKey?.();
+      if (!apiKey?.length) {
+        throw new Error(
+          `Tavily search has no API key for "${config.apiKeyEnv}"; store it through the credentials service, export it in the launching environment, or set a literal "apiKey" in the web-search-tavily config`,
+        );
+      }
 
       // 传递参数；SDK 自行决定默认值，省略未传字段。queries 用第一个。
       const client = tavily({ apiKey });

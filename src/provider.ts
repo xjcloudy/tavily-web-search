@@ -11,8 +11,14 @@ import type { TavilySearchOptions as TavilySdkOptions, TavilySearchResponse } fr
 const TAVILY_PROVIDER_ID = 'tavily';
 
 export interface TavilySearchConfig {
-  /** 已解析好的 API key（启动时预解析，保证同步 available() 准确）。 */
-  readonly apiKey: string;
+  /** Whether the Tavily search provider is enabled. */
+  readonly enabled: boolean;
+  /** Whether the tavily_search tool is registered. */
+  readonly toolEnabled: boolean;
+  /** 可选：已解析好的 API key（若有则无需 lazy resolve）。 */
+  readonly apiKey?: string | undefined;
+  /** 可选：lazy API key 解析器，search 时才调用（避开 apply 时 credentials service 未就绪的时序问题）。 */
+  readonly resolveApiKey?: (() => Promise<string | undefined>) | undefined;
   /** 默认最大返回结果数。 */
   readonly maxResults: number;
   /** 对应的 credential ref 名称（诊断用）。 */
@@ -38,12 +44,19 @@ export class TavilySearchProvider implements WebSearchProvider {
 
   available(): boolean {
     const config = this.resolveConfig();
-    return config.apiKey.length > 0;
+    // 与官方 provider 一致：只要存在 lazy 解析器即可用，不在此处实际解析 key。
+    return (config.apiKey?.length ?? 0) > 0 || config.resolveApiKey !== void 0;
   }
 
   async search(request: WebSearchRequest, signal?: AbortSignal): Promise<WebSearchResult> {
     const config = this.resolveConfig();
-    const apiKey = config.apiKey;
+    const apiKey = config.apiKey?.length ? config.apiKey : await config.resolveApiKey?.();
+    if (!apiKey?.length) {
+      throw new WebError(
+        `Tavily search has no API key for "${config.apiKeyEnv}"; store it through the credentials service, export it in the launching environment, or set a literal "apiKey" in the web-search-tavily config`,
+        'WEB_PROVIDER_ERROR',
+      );
+    }
 
     // 把请求扩展成 SDK 接受的选项
     const sdkReq = request as TavilySearchRequest;
